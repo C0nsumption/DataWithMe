@@ -72,6 +72,9 @@ span {
 import { ref, defineEmits } from 'vue'
 import { useStore } from 'vuex'  // Import useStore
 
+const url = import.meta.env.VITE_API_URL
+
+
 const store = useStore()  // Create a store instance
 
 const username = ref('')
@@ -85,17 +88,21 @@ const view = ref('login')
 const emit = defineEmits(['login'])
 
 const submitForm = async (formType) => {
-  let url = 'http://127.0.0.1:5000/login'
+  console.log(url)
+  let requestUrl = `${url}/login`
+  console.log(requestUrl)
   let user = username.value
   let pass = password.value
 
   if (formType === 'signup') {
-    url = 'http://127.0.0.1:5000/signup'
+    requestUrl = `${url}/signup`
+    console.log(requestUrl)
+
     user = signupUsername.value
     pass = signupPassword.value
   }
 
-  const response = await fetch(url, {
+  const response = await fetch(requestUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

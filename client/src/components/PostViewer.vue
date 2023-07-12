@@ -22,6 +22,7 @@
 import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 
+const url = import.meta.env.VITE_API_URL
 
 const posts = ref([])
 const tableHTML = ref('')
@@ -31,7 +32,7 @@ const store = useStore()
 const getPost = async (postId) => {
     console.log(store)
     console.log('Fetching post with token:', store.state.token)
-    const response = await fetch(`http://127.0.0.1:5000/posts/${postId}`, {
+    const response = await fetch(`${url}/posts/${postId}`, {
       headers: {
         'Authorization': 'Bearer ' + store.state.token
       }
@@ -45,7 +46,7 @@ const getPost = async (postId) => {
 const refreshPosts = async () => {
     console.log(store)
     console.log('Refreshing posts with token:', store.state.token)
-    const response = await fetch(`http://127.0.0.1:5000/posts`, {
+    const response = await fetch(`${url}/posts`, {
       headers: {
         'Authorization': 'Bearer ' + store.state.token
       }

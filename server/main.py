@@ -6,8 +6,41 @@ import pandas as pd
 import io
 from werkzeug.utils import secure_filename
 import os
+from dotenv import load_dotenv
 import jwt
 from jwt import exceptions
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Ensure necessary environment variables are set
+required_env_vars = ['DATABASE_URI', 'SECRET_KEY', 'FLASK_ENV']
+missing_env_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_env_vars:
+    raise EnvironmentError(f"Required environment variables are missing: {', '.join(missing_env_vars)}")
+
+app = Flask(__name__)
+CORS(app)  # This will enable CORS for all routes
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.debug = True if os.getenv('FLASK_ENV') == 'development' else False
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    posts = db.relationship('Post', backref='author', lazy=True)
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(500), nullable=True)  # description can be optional
+    data = db.Column(db.Text, nullable=False)  # This will store the CSV data
+
+    user = db.relationship('User')
+
 
 def authenticate(f):
     @wraps(f)
@@ -44,33 +77,6 @@ def authenticate(f):
         return f(*args, **kwargs)
 
     return decorated_function
-
-
-
-
-
-app = Flask(__name__)
-CORS(app)  # This will enable CORS for all routes
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-app.config['SECRET_KEY'] = 'your-secret-key'
-db = SQLAlchemy(app)
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
-    posts = db.relationship('Post', backref='author', lazy=True)
-
-class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(500), nullable=True)  # description can be optional
-    data = db.Column(db.Text, nullable=False)  # This will store the CSV data
-
-    user = db.relationship('User')
-
-
 
 
 @app.route('/login', methods=['POST'])
@@ -164,4 +170,4 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True)
+    app.run()
