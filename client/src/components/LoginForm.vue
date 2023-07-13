@@ -69,7 +69,7 @@ span {
 </style>
 
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { useStore } from 'vuex'  // Import useStore
 
 const url = import.meta.env.VITE_API_URL
