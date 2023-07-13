@@ -7,31 +7,20 @@ from functools import wraps
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv
 import jwt
 from jwt import exceptions
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 
-
-# Load environment variables from .env file
-load_dotenv()
-
-# Ensure necessary environment variables are set
-REQUIRED_ENV_VARS  = ['DATABASE_URI', 'SECRET_KEY', 'FLASK_ENV']
-missing_env_vars = [var for var in REQUIRED_ENV_VARS  if not os.getenv(var)]
-if missing_env_vars:
-    raise EnvironmentError(f"Required environment variables are missing: {', '.join(missing_env_vars)}")
+# Local application imports
+# from app.models import User, Post
+from app.config import Config
 
 # Initialize Flask app
 app = Flask(__name__)
+app.config.from_object(Config)
 CORS(app)  # This will enable CORS for all routes
-
-# Configure SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-app.debug = True if os.getenv('FLASK_ENV') == 'development' else False
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
@@ -174,6 +163,41 @@ def get_post(post_id):
     table_html = df.head().to_html()
 
     return jsonify({'tableHTML': table_html, 'title': post.title, 'description': post.description})
+
+@app.route('/posts/<int:post_id>', methods=['DELETE'])
+@authenticate
+def delete_post(post_id):
+    post = db.session.get(Post, post_id)
+    if post is None:
+        return jsonify({'message': 'Post not found'}), 404
+
+    if post.user_id != g.current_user.id:
+        return jsonify({'message': 'Not authorized to delete this post'}), 403
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return jsonify({'message': 'Post deleted successfully'}), 200
+
+
+
+@app.route('/user', methods=['DELETE'])
+@authenticate
+def delete_user():
+    # Get the current user
+    user = g.current_user
+
+    # Delete all posts of the user
+    Post.query.filter_by(user_id=user.id).delete()
+
+    # Delete the user
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({'message': 'User and all related posts deleted successfully'}), 200
+
+
+
 
 
 def init_db():
