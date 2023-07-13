@@ -1,29 +1,39 @@
-from flask import Flask, render_template, request, jsonify, g
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
-from functools import wraps
-import pandas as pd
-import io
-from werkzeug.utils import secure_filename
+# Standard library imports
 import os
+import io
+from functools import wraps
+
+# Third party imports
+from flask import Flask, jsonify, request, g
+from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 import jwt
 from jwt import exceptions
+from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
+import pandas as pd
+
 
 # Load environment variables from .env file
 load_dotenv()
 
 # Ensure necessary environment variables are set
-required_env_vars = ['DATABASE_URI', 'SECRET_KEY', 'FLASK_ENV']
-missing_env_vars = [var for var in required_env_vars if not os.getenv(var)]
+REQUIRED_ENV_VARS  = ['DATABASE_URI', 'SECRET_KEY', 'FLASK_ENV']
+missing_env_vars = [var for var in REQUIRED_ENV_VARS  if not os.getenv(var)]
 if missing_env_vars:
     raise EnvironmentError(f"Required environment variables are missing: {', '.join(missing_env_vars)}")
 
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
+
+# Configure SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.debug = True if os.getenv('FLASK_ENV') == 'development' else False
+
+# Initialize SQLAlchemy
 db = SQLAlchemy(app)
 
 class User(db.Model):
@@ -38,8 +48,6 @@ class Post(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500), nullable=True)  # description can be optional
     data = db.Column(db.Text, nullable=False)  # This will store the CSV data
-
-    user = db.relationship('User')
 
 
 def authenticate(f):
@@ -58,7 +66,7 @@ def authenticate(f):
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             print('Decoded token data:', data)  # Debug
-            current_user = User.query.get(data['user_id'])
+            current_user = db.session.get(User, data['user_id'])
             if current_user is None:
                 print('User not found for user_id:', data['user_id'])  # Debug
                 return jsonify({'message': 'User not found.'}), 401
@@ -78,7 +86,6 @@ def authenticate(f):
 
     return decorated_function
 
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -88,11 +95,12 @@ def login():
     user = User.query.filter_by(username=username).first()
 
     # Check if user exists and password is correct
-    if user and user.password == password:
+    if user and check_password_hash(user.password, password):
         token = jwt.encode({'user_id': user.id}, app.config['SECRET_KEY'])
         return jsonify({'message': 'Login successful', 'token': token}), 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 400
+
 
 
 @app.route('/signup', methods=['POST'])
@@ -106,7 +114,8 @@ def signup():
         return jsonify({'message': 'User already exists'}), 400
 
     # If not, create a new user
-    new_user = User(username=username, password=password)
+    hashed_password = generate_password_hash(password, method='scrypt')
+    new_user = User(username=username, password=hashed_password)
     db.session.add(new_user)
     db.session.commit()
 
@@ -115,7 +124,9 @@ def signup():
 
 
 
+
 @app.route('/post', methods=['POST'])
+@authenticate
 def post():
     file = request.files['file']
     title = request.form.get('title')
@@ -137,11 +148,12 @@ def post():
         csv_data = f.read()
 
     # save post to database
-    new_post = Post(title=title, description=description, user_id=1, data=csv_data)  # replace 1 with the actual user ID
+    new_post = Post(title=title, description=description, user_id=g.current_user.id, data=csv_data)
     db.session.add(new_post)
     db.session.commit()
 
     return jsonify({'message': 'File uploaded successfully'}), 201
+
 
 @app.route('/posts', methods=['GET'])
 @authenticate
@@ -153,7 +165,7 @@ def get_posts():
 
 @app.route('/posts/<int:post_id>', methods=['GET'])
 def get_post(post_id):
-    post = Post.query.get(post_id)
+    post = db.session.get(Post, post_id)
     if post is None:
         return jsonify({'message': 'Post not found'}), 404
 
