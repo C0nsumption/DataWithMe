@@ -1,3 +1,4 @@
+<!-- ConfirmationDialog.vue -->
 <template>
     <div class="confirmation-modal" v-if="show" @click.self="handleCancel">
       <div class="confirmation-modal-content">

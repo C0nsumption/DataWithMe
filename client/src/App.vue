@@ -1,20 +1,4 @@
-<script setup>
-import { reactive } from 'vue'
-import LoginForm from './components/LoginForm.vue'
-import ProfilePage from './components/ProfilePage.vue'
-
-const state = reactive({
-  isLoggedIn: false,
-  username: null  // add this line
-})
-
-const handleLogin = (username) => {  // receive the username here
-  console.log('Handling login')
-  state.isLoggedIn = true
-  state.username = username  // and store it in the state
-}
-</script>
-
+<!-- App.vue -->
 
 <template>
   <header>
@@ -30,15 +14,47 @@ const handleLogin = (username) => {  // receive the username here
     <p>
       Log In Status: <span :class="state.isLoggedIn ? 'loggedIn' : 'loggedOut'">{{ state.isLoggedIn }}</span>
     </p>
+    <LogOut v-if="state.isLoggedIn" @logout="handleLogout" />
+
   </header>
 
   <main :class="{ 'login-page': !state.isLoggedIn, 'profile-page': state.isLoggedIn }">
-    <LoginForm v-if="!state.isLoggedIn" @login="handleLogin" />
-    <ProfilePage v-else />
+    <LoginForm v-if="!state.isLoggedIn && formType === 'login'" @login="handleLogin" @changeForm="changeForm" />
+    <SignupForm v-if="!state.isLoggedIn && formType === 'signup'" @signup="handleLogin" @changeForm="changeForm" />
+    <ProfilePage v-if="state.isLoggedIn" />
   </main>
 
 </template>
 
+<script setup>
+import { reactive, ref } from 'vue'
+import LoginForm from './components/LoginForm.vue'
+import SignupForm from './components/SignupForm.vue'
+import ProfilePage from './components/ProfilePage.vue'
+import LogOut from './components/LogOut.vue'
+
+const formType = ref('login')
+
+const changeForm = (newFormType) => {
+  formType.value = newFormType
+}
+
+const state = reactive({
+  isLoggedIn: false,
+  username: null  // add this line
+})
+
+const handleLogin = (username) => {  // receive the username here
+  console.log('Handling login')
+  state.isLoggedIn = true
+  state.username = username  // and store it in the state
+}
+
+const handleLogout = () => {
+  state.isLoggedIn = false
+  state.username = null
+}
+</script>
 
 
 <style scoped>

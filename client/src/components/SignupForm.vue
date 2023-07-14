@@ -1,21 +1,25 @@
-<!-- LoginForm.vue -->
+<!-- SignupForm.vue -->
 <template>
   <div class="form-container">
-    <h2>Login</h2>
+    <h2>Sign Up</h2>
     <form @submit.prevent="submitForm">
       <div>
-        <label for="username">Username:</label>
-        <input type="text" id="username" v-model="username" required>
+        <label for="signupUsername">Username:</label>
+        <input type="text" id="signupUsername" v-model="signupUsername" required>
       </div>
       <div>
-        <label for="password">Password:</label>
-        <input type="password" id="password" v-model="password" required>
+        <label for="signupPassword">Password:</label>
+        <input type="password" id="signupPassword" v-model="signupPassword" required>
       </div>
-      <button type="submit" class="general-button">Login</button>
+      <div>
+        <label for="signupName">Name:</label>
+        <input type="text" id="signupName" v-model="signupName" required>
+      </div>
+      <button type="submit" class="general-button">Sign Up</button>
     </form>
     <span>
-      <p>Don't have an account?</p>
-      <a @click="$emit('changeForm', 'signup')">Sign up here</a>
+      <p>Already have an account?</p>
+      <a @click="$emit('changeForm', 'login')">Back to Login</a>
     </span>
     <span>
       <p v-if="message">{{ message }}</p>
@@ -27,28 +31,31 @@
 import { ref } from 'vue'
 import { useStore } from 'vuex'  // Import useStore
 
+
 const url = import.meta.env.VITE_API_URL
 
 const store = useStore()  // Create a store instance
 
-const username = ref('')
-const password = ref('')
+
+const signupUsername = ref('')
+const signupPassword = ref('')
+const signupName = ref('')  // New field
 
 const message = ref('')
 
-// Define the 'login' event that this component will emit
-const emit = defineEmits(['login', 'changeForm'])
+// Define the 'signup' and 'changeForm' events that this component will emit
+const emit = defineEmits(['signup', 'changeForm'])
+
 
 const submitForm = async () => {
-  console.log(url)
-  const requestUrl = `${url}/login`
-  console.log(requestUrl)
+  const requestUrl = `${url}/signup`
   const response = await fetch(requestUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      username: username.value,
-      password: password.value,
+      username: signupUsername.value,
+      password: signupPassword.value,
+      name: signupName.value,  // Include name in the request
     }),
   })
 
@@ -57,14 +64,13 @@ const submitForm = async () => {
 
   console.log('Response status:', response.status);
   console.log('Response data:', data);
-  if (response.status === 200) {
+
+  if (response.status === 201) {
     store.commit('setToken', data.token);  // Save the token in the store
-    emit('login', username.value)  // Emit the 'login' event with the username
+    emit('signup', signupUsername.value)
   }
 }
 </script>
-
-
 
 <style scoped>
 .form-container {

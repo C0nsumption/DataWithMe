@@ -1,3 +1,5 @@
+# main.py 
+
 # Standard library imports
 import os
 import io
@@ -20,15 +22,38 @@ from app.config import Config
 # Initialize Flask app
 app = Flask(__name__)
 app.config.from_object(Config)
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 CORS(app)  # This will enable CORS for all routes
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
 
+# Association table
+association_table = db.Table('association_table', 
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+)
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    # New fields
+    name = db.Column(db.String(120), nullable=False)  # This will store the user's full name
+    bio = db.Column(db.String(500), nullable=True)  # This will store the user's bio
+    profile_photo = db.Column(db.String(500), nullable=True)  # This will store the URL of the profile photo
+    # Associates and associations fields (representing 'following' and 'followers')
+    associates = db.relationship('User', secondary=association_table, 
+                                primaryjoin=(association_table.c.follower_id == id), 
+                                secondaryjoin=(association_table.c.followed_id == id),
+                                backref=db.backref('associations', lazy='dynamic'), 
+                                lazy='dynamic')
+    # Posts relationship
     posts = db.relationship('Post', backref='author', lazy=True)
 
 class Post(db.Model):
@@ -37,6 +62,7 @@ class Post(db.Model):
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500), nullable=True)  # description can be optional
     data = db.Column(db.Text, nullable=False)  # This will store the CSV data
+
 
 
 def authenticate(f):
@@ -75,6 +101,11 @@ def authenticate(f):
 
     return decorated_function
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -85,11 +116,10 @@ def login():
 
     # Check if user exists and password is correct
     if user and check_password_hash(user.password, password):
-        token = jwt.encode({'user_id': user.id}, app.config['SECRET_KEY'])
+        token = jwt.encode({'user_id': user.id}, app.config['SECRET_KEY'], algorithm="HS256")
         return jsonify({'message': 'Login successful', 'token': token}), 200
     else:
         return jsonify({'message': 'Invalid username or password'}), 400
-
 
 
 @app.route('/signup', methods=['POST'])
@@ -97,6 +127,7 @@ def signup():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    name = data.get('name')
 
     # Check if user already exists
     if User.query.filter_by(username=username).first():
@@ -104,11 +135,19 @@ def signup():
 
     # If not, create a new user
     hashed_password = generate_password_hash(password, method='scrypt')
-    new_user = User(username=username, password=hashed_password)
+    new_user = User(username=username, password=hashed_password, name=name)
     db.session.add(new_user)
     db.session.commit()
 
-    return jsonify({'message': 'User created successfully'}), 201
+    # Generate JWT token for the new user
+    token = jwt.encode({'user_id': new_user.id}, app.config['SECRET_KEY'], algorithm="HS256")
+
+    return jsonify({'message': 'User created successfully', 'user_id': new_user.id, 'token': token}), 201
+
+
+
+
+
 
 
 
@@ -196,8 +235,48 @@ def delete_user():
 
     return jsonify({'message': 'User and all related posts deleted successfully'}), 200
 
+@app.route('/search_user/<username>', methods=['GET'])
+def search_user(username):
+    # Use SQLAlchemy's ilike function to search for similar usernames
+    users = User.query.filter(User.username.ilike(f"{username}%")).all()
+    
+    # Return a list of users
+    users_json = [{'id': user.id, 'username': user.username} for user in users]
+    return jsonify(users_json)
 
 
+@app.route('/upload_photo', methods=['POST'])
+@authenticate
+def upload_photo():
+    # Check if the post request has the file part
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file part'}), 400
+
+    file = request.files['file']
+
+    # If user does not select file, the browser might
+    # submit an empty part without a filename.
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+
+    if file and allowed_file(file.filename):
+        # Secure the filename and save it
+        filename = secure_filename(file.filename)
+
+        # Create a directory for the user if it doesn't exist
+        user_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(g.current_user.id))
+        os.makedirs(user_dir, exist_ok=True)
+        
+        filepath = os.path.join(user_dir, filename)
+        file.save(filepath)
+
+        # Update user's profile photo
+        g.current_user.profile_photo = filepath
+        db.session.commit()
+
+        return jsonify({'message': 'Profile photo updated successfully'}), 200
+
+    return jsonify({'message': 'Allowed file types are png, jpg, jpeg,'}), 400
 
 
 def init_db():

@@ -1,3 +1,4 @@
+<!-- PostViewer.vue -->
 <template>
   <div class="post-viewer-wrapper">
     <div style="display: flex; align-items: center;">
@@ -15,8 +16,8 @@
         <tr v-for="post in posts" :key="post.id">
           <td>{{ post.title }}</td>
           <td>
-            <button class="view-button" @click="getPost(post.id)">View</button>
-            <button class="delete-button" @click="openConfirmation(post.id)">Delete</button>
+            <button class="view-button" @click="viewPost(post.id)">View</button>
+            <button class="delete-button" @click="deletePost(post.id)">Delete</button>
           </td>
         </tr>
       </tbody>
@@ -48,6 +49,25 @@ const posts = ref([])
 const tableHTML = ref('')
 const showConfirmation = ref(false)
 let postIdToDelete = null
+
+const viewPost = (postId) => {
+  if (store.state.token === null) {
+    console.log('No token found. Please log in first.')
+    return
+  }
+
+  getPost(postId)
+}
+
+const deletePost = (postId) => {
+  if (store.state.token === null) {
+    console.log('No token found. Please log in first.')
+    return
+  }
+
+  openConfirmation(postId)
+}
+
 
 const getPost = async (postId) => {
   const response = await fetch(`${url}/posts/${postId}`, {
