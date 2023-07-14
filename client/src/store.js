@@ -9,7 +9,10 @@ export default createStore({
   mutations: {
     setToken(state, token) {
       state.token = token;
-      console.log("Token stored in Vuex:", state.token);  // Add this line
+      console.log("Token stored in Vuex:", state.token);
+    },
+    clearToken(state) {
+      state.token = null;
     },
     // other mutations
   },

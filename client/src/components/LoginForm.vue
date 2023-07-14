@@ -1,3 +1,4 @@
+<!-- LoginForm.vue -->
 <template>
   <div>
     <div v-if="view === 'login'" class="form-container">
