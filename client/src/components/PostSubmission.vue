@@ -1,21 +1,24 @@
 <template>
-  <div class="post-submission-wrapper">
-    <h1>Post Submission</h1>
-    <form @submit.prevent="submitPost">
-      <div>
-        <label>Title:</label>
-        <input type="text" v-model.trim="title" required />
-      </div>
-      <div>
-        <label>Description:</label>
-        <input type="text" v-model.trim="description" required />
-      </div>
-      <div>
-        <label>File:</label>
-        <input type="file" id="file" ref="file" @change="handleFileUpload($event)"/>
-      </div>
-      <button type="submit">Submit</button>
-    </form>
+  <div class="modal" @click="$emit('close')">
+    <div class="modal-content" @click.stop>
+      <span class="close-button" @click="$emit('close')">&times;</span>
+      <h1>Post Submission</h1>
+      <form @submit.prevent="submitPost">
+        <div>
+          <label>Title:</label>
+          <input type="text" v-model.trim="title" required />
+        </div>
+        <div>
+          <label>Description:</label>
+          <input type="text" v-model.trim="description" required />
+        </div>
+        <div>
+          <label>File:</label>
+          <input type="file" id="file" ref="file" @change="handleFileUpload" />
+        </div>
+        <button type="submit">Submit</button>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -28,14 +31,13 @@ const store = useStore()
 
 const title = ref('')
 const description = ref('')
-const file = ref('')
-const message = ref('')
+const file = ref(null)
 
-function handleFileUpload(event) {
+const handleFileUpload = (event) => {
   file.value = event.target.files[0]
 }
 
-async function submitPost() {
+const submitPost = async () => {
   let formData = new FormData()
   formData.append('title', title.value)
   formData.append('description', description.value)
@@ -50,16 +52,42 @@ async function submitPost() {
   })
 
   const data = await response.json()
-  message.value = data.message
+  console.log(data.message)
 }
 </script>
 
 <style scoped>
-.post-submission-wrapper{
-  border: 1px solid #fff;
+.modal {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+  background-color: #444;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  max-width: 500px;
+}
+
+.close-button {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
 }
 </style>

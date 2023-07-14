@@ -120,7 +120,7 @@ const submitForm = async (formType) => {
   console.log('Response data:', data);
   if (response.status === 200) {
     store.commit('setToken', data.token);  // Save the token in the store
-    emit('login')  // Emit the 'login' event 
+    emit('login', user)  // Emit the 'login' event with the username
   }
 }
 </script>

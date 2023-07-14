@@ -1,15 +1,17 @@
 <script setup>
 import { reactive } from 'vue'
 import LoginForm from './components/LoginForm.vue'
-import HomePage from './components/HomePage.vue'
+import ProfilePage from './components/ProfilePage.vue'
 
 const state = reactive({
-  isLoggedIn: false
+  isLoggedIn: false,
+  username: null  // add this line
 })
 
-const handleLogin = () => {
+const handleLogin = (username) => {  // receive the username here
   console.log('Handling login')
   state.isLoggedIn = true
+  state.username = username  // and store it in the state
 }
 </script>
 
@@ -20,21 +22,24 @@ const handleLogin = () => {
 
     <div class="wrapper">
     </div>
+
+    <!-- Debugging -->
+    <p v-if="state.isLoggedIn"> 
+      Log In Profile: <span class="loggedIn">{{ state.username }}</span>
+    </p>
+    <p>
+      Log In Status: <span :class="state.isLoggedIn ? 'loggedIn' : 'loggedOut'">{{ state.isLoggedIn }}</span>
+    </p>
   </header>
 
-  <main :class="{ 'login-page': !state.isLoggedIn, 'home-page': state.isLoggedIn }">
+  <main :class="{ 'login-page': !state.isLoggedIn, 'profile-page': state.isLoggedIn }">
     <LoginForm v-if="!state.isLoggedIn" @login="handleLogin" />
-    <HomePage v-else />
+    <ProfilePage v-else />
   </main>
 
-  <!-- Debugging -->
-  <p>Is logged in: {{ state.isLoggedIn }}</p>
 </template>
 
 
-
-
-<!-- existing styles -->
 
 <style scoped>
 header {
@@ -48,8 +53,10 @@ header {
 
 header {
     display: flex;
+    flex-direction: column;
     place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+    justify-content: center;
+    /* padding-right: calc(var(--section-gap) / 2); */
   }
 
 header .wrapper {
@@ -63,21 +70,29 @@ header .wrapper {
   justify-content: center;
   align-items: center;
   border: 1px solid #fff;
-  min-width: 1024px;
+  min-width: 80vw;
   min-height: 95vh;
 }
 
-.home-page {
+.profile-page {
   display: block;
   border: 1px solid #fff;
-  min-width: 1024px;
+  min-width: 80vw;
   min-height: 95vh;
 }
 
 @media (min-width: 1024px) {
-  .logo {
-    margin: 0 2rem 0 0;
+.logo {
+    /* margin: 0 2rem 0; */
   }
+}
+
+.loggedIn {
+  color: hsla(160, 100%, 37%, 1); /* Green */
+}
+
+.loggedOut {
+  color: hsla(0, 100%, 50%, 1); /* Red or Orange */
 }
 </style>
 
