@@ -1,7 +1,9 @@
+<!-- App.vue -->
 <script setup>
 import { reactive } from 'vue'
 import LoginForm from './components/LoginForm.vue'
 import ProfilePage from './components/ProfilePage.vue'
+import LogOut from './components/LogOut.vue'
 
 const state = reactive({
   isLoggedIn: false,
@@ -12,6 +14,11 @@ const handleLogin = (username) => {  // receive the username here
   console.log('Handling login')
   state.isLoggedIn = true
   state.username = username  // and store it in the state
+}
+
+const handleLogout = () => {
+  state.isLoggedIn = false
+  state.username = null
 }
 </script>
 
@@ -30,6 +37,8 @@ const handleLogin = (username) => {  // receive the username here
     <p>
       Log In Status: <span :class="state.isLoggedIn ? 'loggedIn' : 'loggedOut'">{{ state.isLoggedIn }}</span>
     </p>
+    <LogOut v-if="state.isLoggedIn" @logout="handleLogout" />
+
   </header>
 
   <main :class="{ 'login-page': !state.isLoggedIn, 'profile-page': state.isLoggedIn }">

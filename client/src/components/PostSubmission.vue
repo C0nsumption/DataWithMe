@@ -1,3 +1,4 @@
+<!-- PostSubmission.vue -->
 <template>
   <div class="modal" @click="$emit('close')">
     <div class="modal-content" @click.stop>
