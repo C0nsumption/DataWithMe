@@ -1,3 +1,5 @@
+# main.py 
+
 # Standard library imports
 import os
 import io
@@ -196,6 +198,14 @@ def delete_user():
 
     return jsonify({'message': 'User and all related posts deleted successfully'}), 200
 
+@app.route('/search_user/<username>', methods=['GET'])
+def search_user(username):
+    # Use SQLAlchemy's ilike function to search for similar usernames
+    users = User.query.filter(User.username.ilike(f"{username}%")).all()
+    
+    # Return a list of users
+    users_json = [{'id': user.id, 'username': user.username} for user in users]
+    return jsonify(users_json)
 
 
 

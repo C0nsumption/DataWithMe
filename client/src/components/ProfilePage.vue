@@ -1,12 +1,13 @@
+<!-- ProfilePage.vue -->
 <template>
   <div>
+    <UserSearch />
+
       <h1>User Profile</h1>
       <p>One hell of a homepage, isn't it?</p>
       <PostViewer />
       <PostSubmission v-if="isModalOpen" @close="closeModal" />
-
       <button @click="openModal">Create New Post</button>
-
   </div>
 </template>
 
@@ -14,6 +15,7 @@
 import { ref } from 'vue'
 import PostSubmission from './PostSubmission.vue'
 import PostViewer from './PostViewer.vue'
+import UserSearch from './UserSearch.vue'
 
 const isModalOpen = ref(false)
 
@@ -25,4 +27,3 @@ const closeModal = () => {
   isModalOpen.value = false
 }
 </script>
-
