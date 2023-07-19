@@ -28,12 +28,14 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { useStore } from 'vuex'
 import LoginForm from './components/LoginForm.vue'
 import SignupForm from './components/SignupForm.vue'
 import ProfilePage from './components/ProfilePage.vue'
 import LogOut from './components/LogOut.vue'
 
 const formType = ref('login')
+const store = useStore()
 
 const changeForm = (newFormType) => {
   formType.value = newFormType
@@ -44,11 +46,14 @@ const state = reactive({
   username: null  // add this line
 })
 
-const handleLogin = (username) => {  // receive the username here
+const handleLogin = (username) => {
   console.log('Handling login')
   state.isLoggedIn = true
-  state.username = username  // and store it in the state
+  state.username = username
+  store.commit('setCurrentUser', username);  // use mutation to set currentUser
 }
+
+
 
 const handleLogout = () => {
   state.isLoggedIn = false

@@ -2,20 +2,28 @@
 <template>
   <div>
     <UserSearch />
-
-      <h1>User Profile</h1>
-      <p>One hell of a homepage, isn't it?</p>
-      <PostViewer />
-      <PostSubmission v-if="isModalOpen" @close="closeModal" />
-      <button @click="openModal">Create New Post</button>
+    <UserProfile v-if="user" :user="user" />
+    <PostViewer />
+    <PostSubmission v-if="isModalOpen" @close="closeModal" />
+    <button @click="openModal">Create New Post</button>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import PostSubmission from './PostSubmission.vue'
 import PostViewer from './PostViewer.vue'
 import UserSearch from './UserSearch.vue'
+import UserProfile from './UserProfile.vue'
+
+const store = useStore()
+const user = ref(null)
+
+onMounted(async () => {
+  await store.dispatch('fetchCurrentUser')
+  user.value = store.state.currentUser
+})
 
 const isModalOpen = ref(false)
 

@@ -6,7 +6,8 @@ def test_signup(client):
     # Setup
     data = {
         "username": "testuser",
-        "password": "testpassword"
+        "password": "testpassword",
+        "name": "Test User"
     }
     
     # Exercise
@@ -15,6 +16,7 @@ def test_signup(client):
     # Verify
     assert response.status_code == 201
     assert response.json['message'] == 'User created successfully'
+    assert 'token' in response.json
 
 def test_login(client):
     # Arrange
