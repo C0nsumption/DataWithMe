@@ -181,16 +181,22 @@ def post():
 
     return jsonify({'message': 'File uploaded successfully'}), 201
 
-
-@app.route('/posts', methods=['GET'])
+# viewing all post associated with a user
+@app.route('/user/posts', methods=['GET'])
+@app.route('/user/posts/<int:user_id>', methods=['GET'])
 @authenticate
-def get_posts():
-    posts = Post.query.filter_by(user_id=g.current_user.id).all()
+def get_posts(user_id=None):
+    if user_id is None:
+        user_id = g.current_user.id
+
+    posts = Post.query.filter_by(user_id=user_id).all()
     posts_json = [{'id': post.id, 'title': post.title} for post in posts]
     return jsonify(posts_json)
 
 
+# viewing a single post
 @app.route('/posts/<int:post_id>', methods=['GET'])
+@authenticate
 def get_post(post_id):
     post = db.session.get(Post, post_id)
     if post is None:

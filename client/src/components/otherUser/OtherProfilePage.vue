@@ -4,15 +4,17 @@
       <div class="other-profile-modal-content">
         <span class="close-button" @click="closeModal">&times;</span>
         <OtherUserProfile :user="user" />
+        <OtherUserPostViewer :userId="user.id" />
         <!-- Additional components related to the other user's profile can be added here -->
       </div>
     </div>
 </template>
   
 <script setup>
-import { computed, defineEmits } from 'vue'
+import { computed } from 'vue'
 import { useStore } from 'vuex'
 import OtherUserProfile from './OtherUserProfile.vue'
+import OtherUserPostViewer from './OtherUserPostViewer.vue'
 
 const store = useStore();
 

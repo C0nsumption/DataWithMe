@@ -102,7 +102,7 @@ const cancelDelete = () => {
 }
 
 const refreshPosts = async () => {
-  const response = await fetch(`${url}/posts`, {
+  const response = await fetch(`${url}/user/posts`, {
     headers: {
       'Authorization': 'Bearer ' + store.state.token
     }

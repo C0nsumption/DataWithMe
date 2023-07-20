@@ -45,7 +45,6 @@ const invokeBlur = () => {
 }
 
 const handleClick = (user) => {
-    store.dispatch('fetchFullUserProfile', user.username);
     emit('userClicked', user);
 }
 

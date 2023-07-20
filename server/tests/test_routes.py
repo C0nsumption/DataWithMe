@@ -78,8 +78,9 @@ def test_get_posts(client, app):
     login_response = client.post('/login', json=login_data)
     token = login_response.json['token']
 
-    # Exercise
-    response = client.get('/posts', headers={'Authorization': f"Bearer {token}"})
+    # Exercise  
+    response = client.get('/user/posts', headers={'Authorization': f"Bearer {token}"})
+
 
     # Verify
     assert response.status_code == 200
@@ -95,7 +96,7 @@ def test_get_post(client, app):
     token = login_response.json['token']
 
     # Get posts of the user
-    response = client.get('/posts', headers={'Authorization': f"Bearer {token}"})
+    response = client.get('user/posts', headers={'Authorization': f"Bearer {token}"})
     assert response.status_code == 200
     posts = response.get_json()
 
@@ -123,7 +124,7 @@ def test_delete_post(client, app):
     token = login_response.json['token']
 
     # Get posts of the user
-    response = client.get('/posts', headers={'Authorization': f"Bearer {token}"})
+    response = client.get('user/posts', headers={'Authorization': f"Bearer {token}"})
     assert response.status_code == 200
     posts = response.get_json()
 
