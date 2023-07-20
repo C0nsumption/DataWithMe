@@ -6,7 +6,7 @@ import io
 from functools import wraps
 
 # Third party imports
-from flask import Flask, jsonify, request, g
+from flask import Flask, jsonify, request, g, url_for
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 import jwt
@@ -15,7 +15,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 
-# Local application imports
+#  application imports
 # from app.models import User, Post
 from app.config import Config
 
@@ -135,7 +135,12 @@ def signup():
 
     # If not, create a new user
     hashed_password = generate_password_hash(password, method='scrypt')
-    new_user = User(username=username, password=hashed_password, name=name)
+    
+    # Set default profile photo path
+    default_profile_photo_path = url_for('static', filename='default_profile_img.png')
+    
+    new_user = User(username=username, password=hashed_password, name=name, profile_photo=default_profile_photo_path)
+    
     db.session.add(new_user)
     db.session.commit()
 
@@ -143,12 +148,6 @@ def signup():
     token = jwt.encode({'user_id': new_user.id}, app.config['SECRET_KEY'], algorithm="HS256")
 
     return jsonify({'message': 'User created successfully', 'user_id': new_user.id, 'token': token}), 201
-
-
-
-
-
-
 
 
 
@@ -182,16 +181,22 @@ def post():
 
     return jsonify({'message': 'File uploaded successfully'}), 201
 
-
-@app.route('/posts', methods=['GET'])
+# viewing all post associated with a user
+@app.route('/user/posts', methods=['GET'])
+@app.route('/user/posts/<int:user_id>', methods=['GET'])
 @authenticate
-def get_posts():
-    posts = Post.query.filter_by(user_id=g.current_user.id).all()
+def get_posts(user_id=None):
+    if user_id is None:
+        user_id = g.current_user.id
+
+    posts = Post.query.filter_by(user_id=user_id).all()
     posts_json = [{'id': post.id, 'title': post.title} for post in posts]
     return jsonify(posts_json)
 
 
+# viewing a single post
 @app.route('/posts/<int:post_id>', methods=['GET'])
+@authenticate
 def get_post(post_id):
     post = db.session.get(Post, post_id)
     if post is None:
@@ -243,6 +248,25 @@ def search_user(username):
     # Return a list of users
     users_json = [{'id': user.id, 'username': user.username} for user in users]
     return jsonify(users_json)
+
+@app.route('/user/<username>', methods=['GET'])
+def get_user_profile(username):
+    # Fetch user from the database
+    user = User.query.filter_by(username=username).first()
+
+    # If user doesn't exist, return an error
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Return user profile information as JSON
+    user_json = {
+        'id': user.id, 
+        'username': user.username,
+        'name': user.name,
+        'bio': user.bio, 
+        'profile_photo': user.profile_photo
+    }
+    return jsonify(user_json)
 
 
 @app.route('/upload_photo', methods=['POST'])

@@ -1,69 +1,57 @@
 <template>
-    <div class="user-search">
-      <input 
-        type="text" 
-        v-model="username" 
-        placeholder="Search users" 
-        @keyup="invokeSearch"
-        @blur="invokeBlur"
-        class="search-input"
-      />
-    
-      <div class="user-list" v-if="users.length" @click.self="closeSearch">
-        <div 
-          class="user" 
-          v-for="user in users" 
-          :key="user.id" 
-          @click.stop="handleClick(user)"
-        >
-          {{ user.username }}
-        </div>
+  <div class="user-search">
+    <input 
+      type="text" 
+      v-model="username" 
+      placeholder="Search users" 
+      @keyup="invokeSearch"
+      @blur="invokeBlur"
+      class="search-input"
+    />
+
+    <div class="user-list" v-if="users.length" @click.self="closeSearch">
+      <div 
+        class="user" 
+        v-for="user in users" 
+        :key="user.id" 
+        @click.stop="handleClick(user)"
+      >
+        {{ user.username }}
       </div>
     </div>
-  </template>
-  
-  <script>
-  import { ref } from 'vue'
-  import { useStore } from 'vuex'
-    
-  export default {
-    name: 'UserSearch',
-    setup() {
-      const store = useStore()
-      const username = ref('')
-      const users = ref([])
-    
-      const invokeSearch = async () => {
-        if (username.value) {
-          users.value = await store.dispatch('searchUser', username.value)
-        } else {
-          users.value = [] // clear users when input is empty
-        }
-      }
-  
-      const invokeBlur = () => {
-        setTimeout(() => { users.value = [] }, 200) // clear users when focus is lost, with delay for click event
-      }
-    
-      const handleClick = (user) => {
-        console.log(user)
-      }
-      
-      const closeSearch = () => {
-        users.value = [] // clear users when clicked outside
-      }
-    
-      return {
-        username,
-        users,
-        invokeSearch,
-        handleClick,
-        invokeBlur,
-        closeSearch
-      }
-    }
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import { useStore } from 'vuex'
+
+const store = useStore()
+const username = ref('')
+const users = ref([])
+
+const emit = defineEmits(['userClicked'])
+
+const invokeSearch = async () => {
+  if (username.value) {
+    users.value = await store.dispatch('searchUser', username.value)
+  } else {
+    users.value = [] // clear users when input is empty
   }
-  </script>
+}
+
+const invokeBlur = () => {
+  setTimeout(() => { users.value = [] }, 200) // clear users when focus is lost, with delay for click event
+}
+
+const handleClick = (user) => {
+    emit('userClicked', user);
+}
+
+const closeSearch = () => {
+  users.value = [] // clear users when clicked outside
+}
+</script>
 
 <style scoped>
 .user-search {
