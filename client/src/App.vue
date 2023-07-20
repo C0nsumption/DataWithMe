@@ -21,7 +21,10 @@
   <main :class="{ 'login-page': !state.isLoggedIn, 'profile-page': state.isLoggedIn }">
     <LoginForm v-if="!state.isLoggedIn && formType === 'login'" @login="handleLogin" @changeForm="changeForm" />
     <SignupForm v-if="!state.isLoggedIn && formType === 'signup'" @signup="handleLogin" @changeForm="changeForm" />
+    <UserSearch v-if="state.isLoggedIn" @userClicked="loadUserProfile" />
     <ProfilePage v-if="state.isLoggedIn" />
+    <OtherProfilePage v-if="selectedUser" :user="selectedUser" @close-modal="closeOtherProfileModal"/>
+
   </main>
 
 </template>
@@ -31,11 +34,18 @@ import { reactive, ref } from 'vue'
 import { useStore } from 'vuex'
 import LoginForm from './components/LoginForm.vue'
 import SignupForm from './components/SignupForm.vue'
-import ProfilePage from './components/ProfilePage.vue'
+import ProfilePage from './components/currentUser/ProfilePage.vue'
+import UserSearch from './components/UserSearch.vue'
+import OtherProfilePage from './components/otherUser/OtherProfilePage.vue'
 import LogOut from './components/LogOut.vue'
 
 const formType = ref('login')
 const store = useStore()
+const selectedUser = ref(null)
+
+const loadUserProfile = async (user) => {
+    selectedUser.value = await store.dispatch('fetchFullUserProfile', user.username)
+}
 
 const changeForm = (newFormType) => {
   formType.value = newFormType
@@ -58,6 +68,10 @@ const handleLogin = (username) => {
 const handleLogout = () => {
   state.isLoggedIn = false
   state.username = null
+}
+
+const closeOtherProfileModal = () => {
+    selectedUser.value = null;
 }
 </script>
 
