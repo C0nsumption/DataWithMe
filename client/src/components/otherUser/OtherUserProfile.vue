@@ -1,13 +1,13 @@
-<!-- UserProfile.vue -->
+<!-- OtherUserProfile.vue -->
 <template>
-    <div class="profile-container">
-      <img class="profile-photo" :src="fullImageUrl" alt="Profile photo">
-      <div class="profile-info">
-        <h1>{{ user.name }}</h1>
-        <h2>Bio:</h2>
-        <p>{{ user.bio ? user.bio : 'User has not filled in bio' }}</p>
-      </div>
+  <div class="profile-container">
+    <img class="profile-photo" :src="fullImageUrl" alt="Profile photo">
+    <div class="profile-info">
+      <h1>{{ user.name }}</h1>
+      <h2>Bio:</h2>
+      <p>{{ user.bio ? user.bio : 'User has not filled in bio' }}</p>
     </div>
+  </div>
 </template>
   
 <script setup>
@@ -17,10 +17,7 @@ const props = defineProps({
   user: Object
 })
 
-// Get base URL from environment variables
 const baseUrl = import.meta.env.VITE_API_URL
-
-// Compute full image URL
 const fullImageUrl = computed(() => `${baseUrl}${props.user.profile_photo}`)
 </script>
 

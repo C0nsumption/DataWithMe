@@ -40,7 +40,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import ConfirmationDialog from './ConfirmationDialog.vue'
+import ConfirmationDialog from '../ConfirmationDialog.vue'
 
 const url = import.meta.env.VITE_API_URL
 const store = useStore()

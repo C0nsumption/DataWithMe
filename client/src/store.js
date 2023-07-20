@@ -6,7 +6,8 @@ const url = import.meta.env.VITE_API_URL
 export default createStore({
   state: {
     token: null,
-    currentUser: null  // add this line
+    currentUser: null,
+    selectedUserProfile: null  // new state property
     // other state
   },
   mutations: {
@@ -19,6 +20,9 @@ export default createStore({
     },
     clearToken(state) {
       state.token = null;
+    },
+    setSelectedUserProfile(state, user) {  // new mutation
+      state.selectedUserProfile = user;
     },
     // other mutations
   },
@@ -53,6 +57,24 @@ export default createStore({
         console.error('Error reading response body:', error);
       }
     },
+    async fetchFullUserProfile({ commit, state }, username) {
+      try {
+          const response = await fetch(`${url}/user/${username}`, {
+              headers: { 'Authorization': `Bearer ${state.token}` }
+          });
+
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const user = await response.json();
+          commit('setSelectedUserProfile', user);  // use the new mutation
+          return user;
+      } catch (error) {
+          console.error('Error fetching full user profile:', error);
+      }
+  }
+  
     // other actions
   },
   modules: {

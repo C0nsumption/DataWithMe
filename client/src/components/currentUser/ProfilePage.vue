@@ -1,7 +1,6 @@
 <!-- ProfilePage.vue -->
 <template>
   <div>
-    <UserSearch />
     <UserProfile v-if="user" :user="user" />
     <PostViewer />
     <PostSubmission v-if="isModalOpen" @close="closeModal" />
@@ -14,8 +13,8 @@ import { ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import PostSubmission from './PostSubmission.vue'
 import PostViewer from './PostViewer.vue'
-import UserSearch from './UserSearch.vue'
-import UserProfile from './UserProfile.vue'
+// import UserSearch from '../UserSearch.vue'
+import UserProfile from './CurrentUserProfile.vue'
 
 const store = useStore()
 const user = ref(null)
